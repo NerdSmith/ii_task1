@@ -9,7 +9,7 @@ from sklearn.metrics import silhouette_score
 def use_df(f):
     df = read_csv('./USA/usa_elections.dat', header=0, delimiter=';')
     # df = df.fillna(0)
-    # df = df.dropna()
+    # df = df.dropna(axis=1)
 
 
     def inner():
@@ -20,15 +20,18 @@ def use_df(f):
 
 @use_df
 def show_dendrogram(df: DataFrame):
-    print(df)
-    complete_clustering = linkage(df.drop("state.name", axis=1), method="average", metric="euclidean")
+
+    data = df.drop("state.name", axis=1).values
+    data = fill_with_avg(data)
+    print(data)
+    complete_clustering = linkage(data, method="average", metric="euclidean")
     dendrogram(complete_clustering, labels=df["state.name"].values.tolist())
     plt.show()
 
 
 def fill_with_avg(data):
     missing = ~np.isfinite(data)
-    mu = np.nanmean(data, 0, keepdims=1)
+    mu = np.nanmean(data, 1, keepdims=1)
     data = np.where(missing, mu, data)
     return data
 
@@ -48,7 +51,7 @@ def show_k_average(df: DataFrame):
     plt.xticks(range(1, len(wss) + 1))
     plt.ylabel("Squared Error (Cost)")
     plt.show()
-    cluster = AgglomerativeClustering(n_clusters=28, affinity='euclidean', linkage='average')
+    cluster = AgglomerativeClustering(n_clusters=4, affinity='euclidean', linkage='average')
 
     cluster.fit_predict(data)
 
@@ -86,7 +89,7 @@ def optimal_k(points, max_sil=0, kmax=20):
 
 
 def main():
-    show_k_average()
+    show_dendrogram()
 
 
 if __name__ == '__main__':
